@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "grbj-ensp": {
+      "command": "C:/opt/grbj-ensp-mcp/Scripts/python.exe",
+      "args": ["-m", "grbj_ensp_mcp.server"]
+    }
+  }
+}

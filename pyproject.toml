@@ -1,0 +1,126 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "grbj-ensp-mcp"
+version = "0.2.2"
+description = "通过 MCP 协议让 AI 操作本地 eNSP 网络仿真平台完成实验配置"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [
+    { name = "grbj-ensp-mcp contributors" },
+]
+keywords = [
+    "mcp",
+    "ensp",
+    "huawei",
+    "network",
+    "automation",
+    "telnet",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Networking",
+]
+dependencies = [
+    "mcp>=1.0,<2.0",
+    "defusedxml>=0.7.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+]
+
+[project.scripts]
+grbj-ensp-mcp = "grbj_ensp_mcp.server:main"
+
+[project.urls]
+Homepage = "https://github.com/your-org/grbj-ensp-mcp"
+Issues = "https://github.com/your-org/grbj-ensp-mcp/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/grbj_ensp_mcp"]
+
+[tool.hatch.build.targets.sdist]
+# sdist 包含：源码、README、LICENSE、docs、examples、tests、skill、pyproject.toml。
+# 排除：.venv、.git、缓存、IDE 配置、开发者本地 memory (.workbuddy/)、
+# 构建产物目录（build/、dist/）。
+exclude = [
+    ".venv",
+    ".git",
+    ".gitignore",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "__pycache__",
+    "*.pyc",
+    "*.pyo",
+    "*.pyd",
+    ".idea",
+    ".vscode",
+    ".DS_Store",
+    "*.log",
+    ".workbuddy",
+    "build",
+    "dist",
+    "*.egg-info",
+    "htmlcov",
+    ".coverage",
+    ".tox",
+    ".eggs",
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "UP", # pyupgrade
+    "N",  # pep8-naming
+    "C4", # flake8-comprehensions
+    "RET",
+    "SIM",
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["N802", "N803"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true

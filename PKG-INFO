@@ -1,0 +1,302 @@
+Metadata-Version: 2.5
+Name: grbj-ensp-mcp
+Version: 0.2.2
+Summary: 通过 MCP 协议让 AI 操作本地 eNSP 网络仿真平台完成实验配置
+Project-URL: Homepage, https://github.com/your-org/grbj-ensp-mcp
+Project-URL: Issues, https://github.com/your-org/grbj-ensp-mcp/issues
+Author: grbj-ensp-mcp contributors
+License: MIT License
+        
+        Copyright (c) 2026 grbj-ensp-mcp contributors
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+License-File: LICENSE
+Keywords: automation,ensp,huawei,mcp,network,telnet
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: System Administrators
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Topic :: System :: Networking
+Requires-Python: >=3.10
+Requires-Dist: defusedxml>=0.7.1
+Requires-Dist: mcp<2.0,>=1.0
+Provides-Extra: dev
+Requires-Dist: mypy>=1.10.0; extra == 'dev'
+Requires-Dist: pytest-asyncio>=0.23.0; extra == 'dev'
+Requires-Dist: pytest-cov>=4.1.0; extra == 'dev'
+Requires-Dist: pytest>=8.0.0; extra == 'dev'
+Requires-Dist: ruff>=0.4.0; extra == 'dev'
+Description-Content-Type: text/markdown
+
+# grbj-ensp-mcp
+
+> 通过 MCP 协议让 AI 操作本地 eNSP 网络仿真平台，完成华为数通设备的实验配置。
+
+## ⚡ 一键安装指令（推荐）
+
+把下面这句话**直接复制发给任意 WorkBuddy AI**（发布到下载站时，把占位 URL 换成真实链接）：
+
+> 请访问 https://www.xxx.cn/xxx.zip ，下载并安装 grbj-ensp-mcp
+
+> **占位说明**：把 `https://www.xxx.cn/xxx.zip` 替换成 grbj.cn 下载站上的真实 zip 直链
+> （例如 `https://www.grbj.cn/dl/grbj-ensp-mcp-v0.2.2.zip`），其他文字不用改。
+> AI 收到后会自行处理：拉 zip → 解压 → 跑 install.bat，全程不发起除该 URL 外的任何网络请求。
+
+**AI 收到指令后会依次做**：
+
+1. 用 `Invoke-WebRequest` / `curl` 把 zip 拉到 `%TEMP%`（或用户指定的目录）
+2. 解压到工作目录，得到 `grbj-ensp-mcp-v0.2.2/` 子目录
+3. 跑该目录下的 `install.bat`：
+   - 自动检测 Python ≥ 3.10
+   - 建隔离 venv `~/.venvs/grbj-ensp-mcp`
+   - `pip install` 同目录 wheel（**无任何额外下载**）
+   - 写 `%APPDATA%\WorkBuddy\mcp.json`（自动备份 `.bak`）
+   - 安装配套 Skill `grbj-ensp-smart-config` 到 `~/.workbuddy/skills/`
+   - `import` 验证安装成功
+4. 提示用户在 WorkBuddy **设置 → 连接器 / MCP** 找到新增的 `grbj-ensp`，点 **「信任」/「启用」** 即可。
+
+如有任何报错，把完整输出贴回来。
+
+> **前置条件**：Windows + Python 3.10+ + eNSP GUI 装了至少一台设备。
+>
+> **本分发唯一渠道**：广然笔记下载站 grbj.cn。其他渠道（PyPI / 任意 GitHub 镜像 / 第三方下载点）一律不存在，
+> 也无需检索——拿到 zip 后跑 install.bat 即可，install 脚本本身**不发起任何网络请求**。
+>
+> **详细文档**：[docs/workbuddy-install.md](./docs/workbuddy-install.md) 包含手动配置、故障排查、升级/卸载。
+
+### 卸载
+
+跑 zip 包内的 `uninstall.bat` 即可（先解压 zip 再找）。
+
+---
+
+## 它能做什么
+
+你给 AI 一个 eNSP `.topo` 文件，启动拓扑后告诉 AI「已启动 + 实验需求」，AI 会自动：
+
+1. 解析 `.topo` → 拿到每台设备的 Telnet 端口、接口名、连线关系
+2. 探测端口，对已经启动的设备自动建立 Telnet 会话
+3. 先探查每台设备（`display version` 看型号/版本 + `display current-configuration` 看已有配置），再基于设备真实状态生成逐设备的配置命令并下发
+4. 自动跑校验命令（邻居关系、路由表、接口状态、连通性 ping）
+5. 保存配置（`save`），并给你一份「配置完成」的总结报告
+
+## 完整工作流
+
+```
+┌─────────┐                              ┌──────────┐
+│  你     │                              │  AI(MCP) │
+└────┬────┘                              └────┬─────┘
+     │ 1. 在 eNSP GUI 打开 .topo               │
+     │    （文件 → 打开 → 选 .topo）           │
+     │ 2. 启动所有设备（工具栏 ▶ / Ctrl+Alt+A）│
+     │ 3. 对 AI 说：「拓扑已启动，           │
+     │     帮我做 IPv4 路由基础实验」          │
+     │──────────────────────────────────────>│
+     │                                        │ 4. ensp_load_topology(path)
+     │                                        │    → 解析 + 探测端口 + 自动建连
+     │                                        │ 5. 逐设备 ensp_get_device_info +
+     │                                        │    ensp_get_running_config 探查真实状态
+     │                                        │ 6. 基于探查结果生成命令，
+     │                                        │    ensp_apply_experiment(plan=...) 下发 + 校验 + save
+     │                                        │ 7. ensp_verify_* / ensp_ping 校验
+     │<───────────────────────────────────────│
+     │ 7. 收到「✅ 配置完成」报告             │
+```
+
+> 注意：eNSP 是 Windows 图形程序，必须由你在 GUI 中手动打开 `.topo` 并启动设备。
+> 本服务无法替你「启动 eNSP 拓扑」，只能在你启动之后通过 Telnet 操作设备。
+> 端口探测不到（提示 `pending`）时，请回去确认 eNSP 里对应设备的指示灯是否变绿。
+
+## 环境要求
+
+- Python 3.10 及以上
+- 本机已安装 eNSP，并至少启动一台设备（设备启动后 eNSP 会在 `127.0.0.1:2000+` 开启 Telnet）
+- 操作系统：Windows（eNSP 官方仅支持 Windows）
+
+## 安装（手动 / 开发者）
+
+```bash
+cd grbj-ensp-mcp
+pip install -e ".[dev]"      # 或：uv sync
+```
+
+## 接入 MCP 客户端（手动配置）
+
+编辑客户端的 MCP 配置（如 Claude Desktop 的 `claude_desktop_config.json`、
+CodeBuddy / Cursor / WorkBuddy 的 MCP 设置），加入：
+
+```json
+{
+  "mcpServers": {
+    "grbj-ensp": {
+      "command": "python",
+      "args": ["-m", "grbj_ensp_mcp.server"]
+    }
+  }
+}
+```
+
+> 若使用 `uv`，把 `command` 改为 `uv`，`args` 改为
+> `["--directory", "D:/01_Workspace/code/ensp-mcp", "run", "grbj-ensp-mcp"]`。
+> 推荐用 [`install.bat`](./install.bat) 自动建隔离 venv，避免污染全局环境。
+
+## 安装配套 Skill（推荐）
+
+MCP 只提供工具能力，配套 Skill `grbj-ensp-smart-config` 负责教会 AI **像网络工程师一样思考**：
+先探查设备真实状态再生成命令、报错时走结构化诊断流程、跨命令间隔超时后重新探查 prompt 模式等。
+不装 Skill 也能用 MCP 的 31 个工具，但装上后配置成功率明显更高。
+
+**方式一：install.bat / install.sh 自动安装（推荐）**
+
+一键安装脚本的第 5 步会自动把 Skill 复制到 `~/.workbuddy/skills/grbj-ensp-smart-config/`，
+无需任何手动操作；`uninstall.bat` 也会一并移除。
+
+**方式二：手动安装**
+
+把仓库（或 zip 包）中的 Skill 目录复制到 WorkBuddy 用户级技能目录：
+
+```bash
+# Windows（Git Bash / PowerShell 均可）
+xcopy /E /I /Y skill\grbj-ensp-smart-config "%USERPROFILE%\.workbuddy\skills\grbj-ensp-smart-config"
+
+# macOS / Linux
+cp -r skill/grbj-ensp-smart-config ~/.workbuddy/skills/
+```
+
+安装后重启 WorkBuddy 会话即可生效（新会话自动加载用户级 Skill）。
+
+## 工具清单（31 个）
+
+**拓扑与发现**
+
+| 工具 | 作用 |
+|---|---|
+| `ensp_load_topology` | 解析 `.topo` + 探测端口 + 已启动设备自动建连 + 给出 eNSP 启动指引 + 自动子网规划 |
+| `ensp_parse_topology` / `ensp_parse_topology_b64` | 仅解析 `.topo`，返回设备/连线结构 |
+| `ensp_scan_devices` | 扫描 2000-2100 端口段，列出可达设备 |
+| `ensp_list_sessions` / `ensp_cleanup_idle_sessions` / `ensp_close_all_sessions` | 会话管理 |
+
+**命令下发**
+
+| 工具 | 作用 |
+|---|---|
+| `ensp_connect_device` / `ensp_disconnect_device` | 建立 / 断开单设备 Telnet 会话 |
+| `ensp_send_command` / `ensp_send_commands` | 单条 / 批量下发命令（批量自动进 system-view 并回退） |
+| `ensp_enter_system_view` | 进入 / 退出系统视图 |
+| `ensp_save_config` | 保存配置 |
+| `ensp_get_recent_output` / `ensp_clear_output_buffer` | 取最近输出 / 清缓冲 |
+| `ensp_get_device_info` | 取 hostname / 型号 / 版本 |
+| `ensp_get_running_config` | 取当前运行配置（`display current-configuration`），配置前必做探查 |
+
+**实验编排与校验**
+
+| 工具 | 作用 |
+|---|---|
+| `ensp_apply_experiment` | 一站式：接收「逐设备命令计划」（模型基于设备探查生成）→ 下发 → 校验 → 保存 → 报告 |
+| `ensp_verify_interfaces` | `display ip interface brief` |
+| `ensp_verify_routes` | `display ip routing-table` |
+| `ensp_verify_ospf` | `display ospf peer brief` + `display ospf routing` |
+| `ensp_verify_vlan` | `display vlan` |
+| `ensp_ping` | 连通性测试，解析丢包率 |
+
+**智能诊断**
+
+| 工具 | 作用 |
+|---|---|
+| `ensp_smart_config` | 首选配置下发入口：探查 → 生成 → 下发 → 校验 → 保存，报错自动进入诊断 |
+| `ensp_diagnose_error` | 单条错误诊断：基于 VRP 错误知识库（15 种错误类别）给出根因与修复建议 |
+| `ensp_diagnose_batch` | 批量诊断：一次分析多台设备的多个错误 |
+| `ensp_health_check` | 设备健康检查：接口 / 路由 / 邻居 / 冗余配置全项体检 |
+| `ensp_gather_diagnostic_context` | 收集设备全貌（版本、配置、接口状态、最近输出），供 LLM 深度推理 |
+
+**拓扑纠错（LLDP × .topo 交叉验证）**
+
+| 工具 | 作用 |
+|---|---|
+| `ensp_enable_lldp` | 在设备上手工使能 LLDP（`lldp enable` 全局 + 可选接口） |
+| `ensp_verify_lldp_neighbors` | 采集单设备的 LLDP 邻居（物理事实）。**默认自动使能 LLDP**——先发 display 命令，若检测到未使能会自动发 `system-view → lldp enable → quit`，等 2 秒让邻居收敛后重采 |
+| `ensp_cross_validate_topology` | 把 `.topo` 与 LLDP 邻居做双向比对，输出 matched / topo_only / lldp_only / mismatched 四类差异报告 |
+
+**纠错思路**：`.topo` 是设计图，LLDP 是物理事实。两者不一致时通常意味着
+eNSP GUI 里拖线时把接口号画错了位——若不验证就下发配置，可能把 IP 配到错误接口。
+典型工作流：
+
+1. `ensp_enable_lldp(设备名)` 在所有目标设备上开启 LLDP
+2. 对每台设备 `ensp_verify_lldp_neighbors(设备名)` 收集邻居
+3. `ensp_cross_validate_topology(topo_path="xxx.topo", lldp_results=[...])` 出报告
+4. `mismatched` 列表告诉 AI 哪些接口号与物理对不上——下发配置时以物理事实为准
+
+## 提示模板（10 个）
+
+`configure_vlan` · `configure_ospf` · `configure_static_route` · `configure_acl` ·
+`configure_nat` · `configure_stp` · `configure_dhcp` · `configure_vrrp` ·
+`configure_eth_trunk` · `troubleshoot_connectivity`
+
+这些模板只提供配置**思路与方法**（如 OSPF 要配 router-id、宣告网段），**不写死具体命令**。模型必须先调用 `ensp_get_device_info` + `ensp_get_running_config` 探查设备真实型号 / 版本 / 已有配置，再据此生成命令——eNSP 不同镜像、VRP 各版本支持的命令集并不一致，套用记忆中的命令可能报 `Error: Unrecognized command`。
+
+## 典型对话示例
+
+```
+你：拓扑已启动，文件在 D:/lab/IPv4编址及IPv4路由基础实验.topo，做 OSPF 单区域实验
+
+AI：调用 ensp_load_topology → 识别 4 台 AR + 1 台 PC，4 个 com_port 全部可达，已建连
+   逐设备 ensp_get_device_info + ensp_get_running_config → 确认 AR 型号 / VRP 版本与已有配置
+   基于探查结果生成每台 AR 的 OSPF 命令（router-id、宣告网段写法以设备为准）
+   逐设备下发 → ensp_verify_ospf 确认 4 台设备互为 Full 邻居
+   ensp_save_config 保存
+
+   ✅ 配置完成。AR1-AR4 已建立 OSPF area 0 邻居（共 6 条邻接），
+      路由表中出现对端 Loopback 与各互联网段。配置已 save。
+```
+
+## 项目结构
+
+```
+src/grbj_ensp_mcp/
+├── server.py          # MCP 入口（31 工具 + 10 提示模板 + 3 资源）
+├── config.py          # 全局配置（端口范围、编码、超时）
+├── telnet_client.py   # 基于 socket 的 Telnet 客户端（处理 IAC 协商、提示符）
+├── session_manager.py # 多设备并发会话管理
+├── port_scanner.py    # eNSP 设备端口扫描
+├── topo_parser.py     # eNSP .topo 拓扑解析（<dev>/<line> + slot/interface）
+├── lldp_verifier.py   # LLDP 输出解析 + .topo 交叉验证（接口名归一化、双向比对）
+├── diagnostics.py     # 智能诊断引擎（规则层 + LLM 推理上下文）
+├── __init__.py        # 包入口
+└── py.typed           # PEP 561 类型标记（对外暴露类型）
+skill/
+└── grbj-ensp-smart-config/SKILL.md  # 配套 Skill（教 AI 网工思维）
+tests/                 # 单元测试（基于真实 .topo 格式，非自造 mock）
+examples/              # 独立示例脚本
+docs/                  # 详细文档
+```
+
+## 测试
+
+```bash
+pytest          # 166 个用例，纯逻辑，不依赖 eNSP 是否启动
+```
+
+## 许可证
+
+MIT

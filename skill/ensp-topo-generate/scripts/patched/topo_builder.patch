@@ -1,0 +1,65 @@
+--- /e/tmp/topo-work/topo_builder.orig.py	2026-09-11 12:45:55.949652800 +0800
++++ /e/Project/grbj-ensp-mcp/grbj-ensp-mcp-v0.2.2/grbj-ensp-mcp-v0.2.2/src/grbj_ensp_mcp/topo_builder.py	2026-09-09 14:56:23.303671800 +0800
+@@ -33,12 +33,18 @@
+     "AR2220": [("GE", 1), ("GE", 2)],
+     "AR2240": [("GE", 2), ("GE", 2), ("GE", 2)],  # 3 个 LPU 板共 6 个 GE
+     "S2700": [("FE", 24)],
+-    "S3700": [("FE", 24)],
++    "S3700": [("Ethernet", 22), ("GE", 2)],  # 实测对齐 eNSP GUI 默认形态（实验4真实.topo样本）
+     "S5700": [("GE", 24)],
+     "S6700": [("GE", 24)],
+     "AC6005": [("GE", 8)],
+     "AP6050": [("GE", 2)],
+     "USG5500": [("GE", 4), ("Serial", 2)],
++    # USG6000V 默认形态（与 eNSP GUI 拖出一致，逆向自真实 .topo 样本）：
++    # 第一组 = slotIndex 0 的管理口 GE0/0/0（不用于业务连线）；
++    # 第二组 = slotIndex 1 的 7 个业务口 GE1/0/0 ~ GE1/0/6。
++    # 渲染走 _render_dev 的枚举式分支（<slot id="1"> + 逐口 <interface>），
++    # 与 AR/S 的 count 式 <slot number="slot17"> 结构不同，勿合并。
++    "USG6000V": [("GE", 1), ("GE", 7)],
+     "PC": [("Ethernet", 1)],
+     "STA": [],
+     "Laptop": [("Ethernet", 1)],
+@@ -277,21 +283,34 @@
+ def _render_dev(d: _DeviceSpec) -> str:
+     edit_left = int(d.cx) + 27
+     edit_top = int(d.cy) + 54
+-    parts = [
++    head = [
+         f'        <dev id="{d.device_uuid}" name="{d.name}" poe="0" model="{d.model}"',
+         f'             settings="{d.settings}" system_mac="{d.system_mac}" com_port="{d.com_port}" bootmode="0"',
+         f'             cx="{d.cx:.6f}" cy="{d.cy:.6f}" edit_left="{edit_left}" edit_top="{edit_top}">',
+-        '            <slot number="slot17" isMainBoard="1">',
+     ]
++    tail = ["        </dev>"]
++
++    if d.model == "USG6000V":
++        # USG6000V 是虚拟机形态设备，.topo 里用枚举式接口表（逆向自真实样本）：
++        # <slot id="1"> 下每个 <interface> 一个口，slotIndex=0 是管理口 GE0/0/0，
++        # slotIndex=1 是业务口 GE1/0/0 ~ GE1/0/6。每组 slot_specs 对应一个 slotIndex。
++        head.append('            <slot id="1">')
++        for slot_idx, (iface_name, count) in enumerate(d.slot_specs):
++            for i in range(count):
++                head.append(
++                    f'                <interface category="Ethernet" type="{iface_name}"'
++                    f' slotIndex="{slot_idx}" cardIndex="0" interfaceIndex="{i}" />'
++                )
++        head.append("            </slot>")
++        return "\n".join(head + tail)
++
++    head.append('            <slot number="slot17" isMainBoard="1">')
+     for iface_name, count in d.slot_specs:
+-        parts.append(
++        head.append(
+             f'                <interface sztype="Ethernet" interfacename="{iface_name}" count="{count}" />'
+         )
+-    parts += [
+-        "            </slot>",
+-        "        </dev>",
+-    ]
+-    return "\n".join(parts)
++    head.append("            </slot>")
++    return "\n".join(head + tail)
+ 
+ 
+ def _render_line(src_dev: _DeviceSpec, dst_dev: _DeviceSpec, ln: _LineSpec) -> str:
