@@ -23,7 +23,7 @@ python scripts/setup_env.py
 "<技能目录>/.venv/Scripts/python.exe" scripts/selfcheck.py
 
 # 3) 用 setup 打印的解释器路径执行生成脚本
-"<技能目录>/.venv/Scripts/python.exe" examples/gen_example_dual_exit.py 我的拓扑.topo
+"<技能目录>/.venv/Scripts/python.exe" scripts/gen_topo_template.py   # 模板：改两张表后运行
 ```
 
 setup 成功时会打印环境位置与解释器绝对路径；自检全绿说明「装包 + 补丁 + GBK 落盘 + 回读」整条链路可用。
@@ -41,8 +41,6 @@ ensp-topo-generate/
 │   └── patched/
 │       ├── topo_builder.py       # 已打补丁的完整文件（setup 会覆盖安装副本）
 │       └── topo_builder.patch    # unified diff（可审计补丁内容）
-├── examples/
-│   └── gen_example_dual_exit.py  # 完整示例：双出口+双 USG6000V+双核心+接入+终端
 └── assets/
     ├── grbj_ensp_mcp-0.2.2-py3-none-any.whl   # 待安装的包
     └── grbj-ensp-mcp-v0.2.2.zip                # 原厂分发件（含源码/文档/示例）

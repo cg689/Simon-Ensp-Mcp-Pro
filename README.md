@@ -115,7 +115,7 @@ xml = b.render()
 
 **零安装快速体验**：`python "功能1-生成拓扑/一键体验.py"`（自动加载仓库 src，无需 pip install）。
 
-完整可跑示例见 [`功能1-生成拓扑/示例-双出口.py`](功能1-生成拓扑/示例-双出口.py)（双出口 + 双 USG6000V + 双核心，11 设备 14 连线），模板见 [`功能1-生成拓扑/模板脚本.py`](功能1-生成拓扑/模板脚本.py)。
+生成模板见 [`功能1-生成拓扑/模板脚本.py`](功能1-生成拓扑/模板脚本.py)；零安装体验见 [`功能1-生成拓扑/一键体验.py`](功能1-生成拓扑/一键体验.py)。
 
 **型号支持**（builder 内置接口表）：AR1220/2220/2240、S2700/3700/5700/6700、AC6005、AP6050、USG5500、**USG6000V（本 fork 补丁）**、PC/STA/Laptop/Server。
 
@@ -138,7 +138,6 @@ xml = b.render()
 ├── skill/                   两个配套 Skill（拷给 AI 助手用）
 ├── scripts/check_health.py  一键自检
 ├── tests/                   上游测试套件 + verify_usg6000v.py 补丁验证
-├── examples/                上游自带示例（拓扑生成进阶样例）
 ├── docs/                    上游文档 + 日常使用手册 + 原版 README
 ├── install.bat / install.sh
 ├── grbj_ensp_mcp-0.2.2-py3-none-any.whl   原厂 wheel（不含补丁，装完必须覆盖 topo_builder.py）

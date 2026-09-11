@@ -102,7 +102,6 @@ with open(OUT, "wb") as f:
 ## 附带文件
 
 - `scripts/gen_topo_template.py` —— 生成脚本模板（改两张表即可用）
-- `examples/gen_example_dual_exit.py` —— 完整示例：双出口 + 双 USG6000V + 双核心 + 接入 + 终端（11 设备 14 连线，分层坐标）
 - `scripts/setup_env.py` / `scripts/selfcheck.py` —— 环境引导与端到端自检
 - `scripts/patched/` —— 补丁完整文件 + unified diff（可审计）
 - `README-分发说明.md` —— 分发给他人时的前置条件与故障排查
