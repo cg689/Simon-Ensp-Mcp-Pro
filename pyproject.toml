@@ -50,8 +50,8 @@ dev = [
 grbj-ensp-mcp = "grbj_ensp_mcp.server:main"
 
 [project.urls]
-Homepage = "https://github.com/your-org/grbj-ensp-mcp"
-Issues = "https://github.com/your-org/grbj-ensp-mcp/issues"
+Homepage = "https://github.com/cg689/Simon-Ensp-Mcp-Pro"
+Issues = "https://github.com/cg689/Simon-Ensp-Mcp-Pro/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/grbj_ensp_mcp"]
